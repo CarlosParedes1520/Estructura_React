@@ -16,11 +16,14 @@ import { useRouter, useSearch } from "@tanstack/react-router";
 
 import { loginSchema } from "@/core/schemas/login.schema";
 import type { Login } from "@/core/types/login";
-import { loginUser } from "@/infrastructure/adapters/api/service/auth/login.service";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { setUserData } from "@/core/helpers/authUserData";
 import RecoverPasswordModal from "../recoveryPassword/RecoveryPassword";
+import { authService } from "@/infrastructure/adapters/api/login/application/service/customerService";
+
+// 👇 importa la INSTANCIA del servicio (Service + Repository)
+
 export default function Login() {
   const logoSrc = `${import.meta.env.BASE_URL}logo/app.png`;
   const loginSrc = `${import.meta.env.BASE_URL}logo/login.png`;
@@ -30,12 +33,11 @@ export default function Login() {
   const [openRecover, setOpenRecover] = React.useState(false);
 
   const [form, setForm] = React.useState<Login>({
-    email: "mateosalazar7@gmail.com", //mateosalazar7@gmail.com
-    password: "Mateo.com345", //Mateo.com345
+    email: "mateosalazar7@gmail.com",
+    password: "Mateo.com345",
     remember: false,
   });
 
-  // Errores por campo
   const [errors, setErrors] = React.useState<{
     email?: string;
     password?: string;
@@ -46,26 +48,27 @@ export default function Login() {
 
   async function handleLogin(credentials: Pick<Login, "email" | "password">) {
     try {
-      const data = await loginUser(credentials);
-      if (data && data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("company", data.company);
-        localStorage.setItem("email", data.email);
-        // localStorage.setItem("email", data.email);
-        setUserData(data);
-        await router.navigate({
-          to: search?.redirect ?? "/",
-          replace: true,
-        });
-      } else {
-        throw new Error("La respuesta del servidor no es válida.");
-      }
+      const user = await authService.login(credentials); // <- llamada al servicio
+      // Guarda todo el payload (incluye token, email, company, etc.)
+      setUserData(user);
+
+      // (Opcional) si aún quieres mantener algunas keys sueltas:
+      if ((user as any)?.token)
+        localStorage.setItem("token", String((user as any).token));
+      if ((user as any)?.company)
+        localStorage.setItem("company", String((user as any).company));
+      if ((user as any)?.email)
+        localStorage.setItem("email", String((user as any).email));
+
+      await router.navigate({
+        to: search?.redirect ?? "/",
+        replace: true,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
           : "Ocurrió un error desconocido.";
-
       Swal.fire({
         icon: "error",
         title: "Error al iniciar sesión",
@@ -91,6 +94,7 @@ export default function Login() {
       return;
     }
 
+    // remember no se envía al backend
     handleLogin({
       email: parsed.data.email,
       password: parsed.data.password,
@@ -113,7 +117,7 @@ export default function Login() {
         <img
           src={loginSrc}
           alt="Logo"
-          className="absolute inset-0 z-0 h-full w-full "
+          className="absolute inset-0 z-0 h-full w-full"
           draggable={false}
         />
         <div className="absolute inset-0 z-10 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-200/40 via-indigo-100/30 to-transparent" />
@@ -215,7 +219,6 @@ export default function Login() {
                   Recuérdame
                 </label>
 
-                {/* 👇 antes era <a href="#">... */}
                 <button
                   type="button"
                   onClick={() => setOpenRecover(true)}
@@ -252,6 +255,7 @@ export default function Login() {
           </CardFooter>
         </Card>
       </div>
+
       {openRecover && (
         <RecoverPasswordModal
           open={openRecover}
