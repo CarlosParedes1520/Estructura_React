@@ -68,3 +68,4 @@ export default tseslint.config([
 ])
 ```
 # automatic-frontend
+# Estructura_React
