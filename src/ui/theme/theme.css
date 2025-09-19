@@ -1,0 +1,21 @@
+:root {
+  --color-primary: #0d6efd;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #6c757d;
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: #20c997;
+  --color-accent-foreground: #0b2e13;
+
+  --color-background: #0f172a;
+  --color-foreground: #e2e8f0; 
+
+  --color-muted: #94a3b8;
+  --color-border: #1f2937;
+}
+
+.dark {
+  --color-background: #0b1220;
+  --color-foreground: #e5e7eb;
+}
